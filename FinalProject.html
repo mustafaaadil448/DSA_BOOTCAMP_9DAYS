@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Search Application</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 50px;
+        }
+        input[type="text"], button {
+            padding: 10px;
+            margin: 10px 0;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>File Search Application</h1>
+    
+    <h3>Create a New File</h3>
+    <label for="file-path">Enter file path:</label>
+    <input type="text" id="file-path" placeholder="e.g., /documents/myfolder/">
+    <label for="file-create">Enter file name to create:</label>
+    <input type="text" id="file-create" placeholder="e.g., newfile.txt">
+    <label for="file-content">Enter content for the file:</label>
+    <textarea id="file-content" placeholder="Enter file content here..."></textarea>
+    <button id="create-button">Create and Download File</button>
+
+    <h3>Search for a File</h3>
+    <label for="file-search">Enter file name to search:</label>
+    <input type="text" id="file-search" placeholder="e.g., newfile.txt">
+    <button id="search-button">Search</button>
+
+    <h3>Result:</h3>
+    <textarea id="result-area" readonly></textarea>
+
+    <script>
+        // Sample list of files with paths (initially empty)
+        const files = [];
+
+        // Function to perform binary search
+        function binarySearch(array, target) {
+            let left = 0;
+            let right = array.length - 1;
+
+            while (left <= right) {
+                const mid = Math.floor((left + right) / 2);
+
+                // Check if the target is present at mid
+                if (array[mid].name === target) {
+                    return mid;
+                }
+
+                // If target is greater, ignore the left half
+                if (array[mid].name < target) {
+                    left = mid + 1;
+                } 
+                // If target is smaller, ignore the right half
+                else {
+                    right = mid - 1;
+                }
+            }
+
+            // Target was not found
+            return -1;
+        }
+
+        // Event listener for the create button
+        document.getElementById('create-button').addEventListener('click', () => {
+            const filePath = document.getElementById('file-path').value.trim();
+            const createTerm = document.getElementById('file-create').value.trim();
+            const content = document.getElementById('file-content').value;
+
+            if (filePath && createTerm && content) {
+                // Add the new file object to the list
+                const file = {
+                    path: filePath,
+                    name: createTerm
+                };
+                files.push(file);
+                files.sort((a, b) => a.name.localeCompare(b.name)); // Sort by file name
+
+                // Create a blob from the content
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+
+                // Create a link element for downloading
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = createTerm;
+                a.click();
+
+                // Release the object URL
+                URL.revokeObjectURL(url);
+                
+                // Clear input fields
+                document.getElementById('file-path').value = '';
+                document.getElementById('file-create').value = ''; 
+                document.getElementById('file-content').value = ''; 
+                document.getElementById('result-area').value = `File created and downloaded: ${filePath}${createTerm}`;
+            } else {
+                document.getElementById('result-area').value = 'Please enter a valid file path, name, and content.';
+            }
+        });
+
+        // Event listener for the search button
+        document.getElementById('search-button').addEventListener('click', () => {
+            const searchTerm = document.getElementById('file-search').value.trim();
+            const index = binarySearch(files, searchTerm);
+            const resultArea = document.getElementById('result-area');
+
+            if (index >= 0) {
+                const file = files[index];
+                resultArea.value =`File Found: ${file.path}${file.name}`;
+            } else {
+                resultArea.value = 'File not found.';
+            }
+        });
+    </script>
+
+</body>
+</html>
